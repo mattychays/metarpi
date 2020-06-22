@@ -1,0 +1,23 @@
+    Update()
+    print("Update Called ->")
+    for airport in airport_list:
+        print(airport.icao, airport.flight_condition, airport.wind_gusting)
+    print("Set LED Colors ->")    
+    for airport in airport_list:
+        if airport.flight_condition == "VFR":
+            pixels[int(airport.led_num)] = color_vfr
+        elif airport.flight_condition == "MVFR":
+            pixels[int(airport.led_num)] = color_mvfr
+        elif airport.flight_condition == "IFR":
+            pixels[int(airport.led_num)] = color_ifr
+        elif airport.flight_condition == "LIFR":
+            pixels[int(airport.led_num)] = color_lifr
+    print("Refresh Pixels ->")
+    pixels.show()
+    print("Sleep for 10 seconds ->")
+    time.sleep(10)
+    print("Clear Pixels ->")
+    pixels.fill((0,0,0))
+    pixels.show()
+    time.sleep(10)
+    print("Sleep for 10 seconds ->")

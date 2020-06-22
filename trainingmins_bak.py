@@ -1,28 +1,9 @@
 from urllib.request import urlopen  
 from xml.etree import ElementTree
 import csv
-import time
-import neopixel
-import board
 
 airport_list= []
 stored_metars = []
-
-color_vfr = (0, 255,0)
-color_blink = (255, 255, 255)
-color_mvfr = (0,0,255)
-color_mvfr_gust = (0,0,200)
-color_ifr = (255,0,0)
-color_ifr_gust = (200,0,0)
-color_lifr = (255,51,153)
-color_lifr_gust = (255,51, 100)
-
-#Define Timing Variables
-loop_start = time.time()
-timer_secs = 0
-elapsed_secs = 0
-elapsed_mins = 0
-flash_wind = False
 
 class Airport:
     icao = ""
@@ -119,71 +100,21 @@ def getAirportLedNums():
             airport.led_num = row[1]
             airport_list.append(airport)
 
-def UpdateMetarData():
-    
+
+def Update():
+    getAirportLedNums()
     getMetarData()
 
     for airport in airport_list:
         airport.flight_condition = getFlightCondition(airport.icao)
-        airport.wind_gusting = getWindConditions(airport.icao, 19)
-        print(airport.icao, airport.flight_condition, airport.wind_gusting)
+        airport.wind_gusting = getWindConditions(airport.icao, 20)
 
-def UpdateAllAirports():
-    for airport in airport_list:
-        if airport.flight_condition == "VFR":
-            pixels[int(airport.led_num)] = color_vfr
-        elif airport.flight_condition == "MVFR":
-            pixels[int(airport.led_num)] = color_mvfr
-        elif airport.flight_condition == "IFR":
-            pixels[int(airport.led_num)] = color_ifr
-        elif airport.flight_condition == "LIFR":
-            pixels[int(airport.led_num)] = color_lifr
+Update()
 
-def UpdateGustAirports(gust):
-    for airport in airport_list:
-        if airport.wind_gusting == True:
-            if gust == True:
-                pixels[int(airport.led_num)] = color_blink
-            else:
-                if airport.flight_condition == "VFR":
-                    pixels[int(airport.led_num)] = color_vfr
-                elif airport.flight_condition == "MVFR":
-                    pixels[int(airport.led_num)] = color_mvfr
-                elif airport.flight_condition == "IFR":
-                    pixels[int(airport.led_num)] = color_ifr
-                elif airport.flight_condition == "LIFR":
-                    pixels[int(airport.led_num)] = color_lifr
+for airport in airport_list:
+    print(airport.icao, airport.flight_condition, airport.wind_gusting)
 
-
-#Get Airport ICAOS/Corresponding LED Numbers from Airport.csv
-getAirportLedNums()
-#Register the LED Strip attached to D18 on the RaspberryPi
-pixels = neopixel.NeoPixel(board.D18,50,brightness = .1, pixel_order = neopixel.RGB, auto_write = False)
-print("Board Initialized")
-
-#Get Initial Metar Data and Update All Airports
-UpdateMetarData()
-UpdateAllAirports()
-
-while True:
-    timer_secs = time.time() - loop_start
-    if timer_secs > 1:
-        if flash_wind == True:
-            UpdateGustAirports(True)
-            flash_wind = False
-        else:
-            UpdateGustAirports(False)
-            flash_wind = True
-
-
-        if elapsed_secs == 60:
-            elapsed_mins = elapsed_mins + 1
-            if elapsed_mins == 10:
-                UpdateAllAirports()
-
-        #print(pixels)
-        pixels.show()
-        loop_start = time.time()
-        timer_secs = 0
-        elapsed_secs = elapsed_secs + 1
-
+for metar in stored_metars:
+    if "wx_string" in metar:
+        if metar["wx_string"].find("RN"):
+            print("It's raining @", metar["station_id"])
